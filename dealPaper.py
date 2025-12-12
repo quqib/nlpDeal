@@ -28,8 +28,8 @@ def process_excel_in_batches(file_path, output_path, batch_size=100):
 
     # 2. 遍历数据，处理并保存中间结果
     for start_idx in range(0, total_rows, batch_size):
-        # if start_idx < 6800:
-        #     continue
+        if start_idx < 600:
+            continue
         end_idx = min(start_idx + batch_size, total_rows)
         batch_indices = list(range(start_idx, end_idx))
 
@@ -193,7 +193,7 @@ def code_find_name(code):
     com_name = ''
     try:
         cookies = {
-            'safeline_token': 'AJkD2esAAAAAAAAAAAAAAACiEbEQmwEAAGtVzeKOLbEkRjRTnSahs27GxnrB',
+            'safeline_token': 'AJkD2esAAAAAAAAAAAAAAABOp88QmwEAAAjEsNWY7bHs9LXqfccWNoiTdjJv',
         }
 
         headers = {
@@ -243,7 +243,7 @@ def code_find_name(code):
 if __name__ == "__main__":
 
     input_file = "resource.xlsx"  # 输入文件
-    output_file = "企业数据_回填结果_name_1.xlsx"  # 输出文件（可与输入相同）
+    output_file = "企业数据_回填结果_name_2.xlsx"  # 输出文件（可与输入相同）
     result_df = process_excel_in_batches(input_file, output_file, batch_size=100)
 
 
