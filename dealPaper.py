@@ -2,6 +2,7 @@ import time
 import re
 import pandas as pd
 import requests
+from retrying import retry
 from bs4 import BeautifulSoup
 
 
@@ -28,7 +29,7 @@ def process_excel_in_batches(file_path, output_path, batch_size=100):
 
     # 2. 遍历数据，处理并保存中间结果
     for start_idx in range(0, total_rows, batch_size):
-        if start_idx < 600:
+        if start_idx < 11100:
             continue
         end_idx = min(start_idx + batch_size, total_rows)
         batch_indices = list(range(start_idx, end_idx))
@@ -189,11 +190,12 @@ def get_name_t(code):
 
 
 # 从zyt给的接口拿
+@retry(stop_max_attempt_number=10, wait_random_min=3000, wait_random_max=10000)
 def code_find_name(code):
     com_name = ''
     try:
         cookies = {
-            'safeline_token': 'AJkD2esAAAAAAAAAAAAAAABOp88QmwEAAAjEsNWY7bHs9LXqfccWNoiTdjJv',
+            'safeline_token': 'AHAUXGUAAAAAAAAAAAAAAADxCvMbmwEAAOBWFUJl2i/lknLf7OyqgQLQZKMV',
         }
 
         headers = {
@@ -201,10 +203,9 @@ def code_find_name(code):
             'Accept-Language': 'zh-CN,zh;q=0.9',
             'Connection': 'keep-alive',
             'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-            # 'Cookie': 'SESSION=e9c95d7b-bfc0-41bd-a3df-08155dcafe2c; safeline_token=AJkD2esAAAAAAAAAAAAAAADgymkymQEAADtj0dwzdkgpVgOW1nHAdC+nJfl8; 9b928db0-e5ea-45e7-a3b1-392825e21a5c=WyI1OTUyNDUwMDUiXQ; JSESSIONID=e9c95d7b-bfc0-41bd-a3df-08155dcafe2c; SERVERID=8638b73cb1e93cbe0e40fab72203dd4b|1757487458|1757487418',
             'Origin': 'http://www.jsgsj.gov.cn:5888',
             'Referer': 'http://www.jsgsj.gov.cn:5888/province/loginReport.jsp',
-            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36',
             'X-Requested-With': 'XMLHttpRequest',
         }
         # 获取当前 UTC 时间（推荐方式）
@@ -229,6 +230,7 @@ def code_find_name(code):
             headers=headers,
             data=data,
             verify=False,
+            timeout=30
         )
 
         com_name = response.json().get("content").get("CORP_NAME")
@@ -242,8 +244,8 @@ def code_find_name(code):
 # === 调用示例 ===
 if __name__ == "__main__":
 
-    input_file = "resource.xlsx"  # 输入文件
-    output_file = "企业数据_回填结果_name_2.xlsx"  # 输出文件（可与输入相同）
+    input_file = "企业数据_回填结果_name.xlsx"  # 输入文件
+    output_file = "data/企业数据_回填结果_name_6.xlsx"  # 输出文件（可与输入相同）
     result_df = process_excel_in_batches(input_file, output_file, batch_size=100)
 
 

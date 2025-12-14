@@ -1,4 +1,5 @@
 import time
+from retrying import retry
 import re
 import pandas as pd
 import requests
@@ -23,7 +24,7 @@ headers = {
     "X-Tycid": "a08b2c108d5411f0b5376328c2c6d1d5"
 }
 
-
+@retry(stop_max_attempt_number=10, wait_random_min=3000, wait_random_max=10000)
 def get_code(comName):
     code = ''
     params = {
@@ -33,13 +34,13 @@ def get_code(comName):
     json_data = {
         'keyword': comName,
     }
-    time.sleep(0.5)
+    time.sleep(1)
     response = requests.post(
         'https://capi.tianyancha.com/cloud-tempest/search/suggest/company/main',
         params=params,
         headers=headers,
         json=json_data,
-        timeout=20
+        timeout=30
     )
 
     code = parase_data(response, comName)
@@ -74,7 +75,12 @@ def process_excel_in_batches(file_path, output_path, batch_size=100):
         for idx, company_name in zip(batch_indices, batch_companies):
             if pd.isna(company_name) or not str(company_name).strip():
                 continue  # 跳过空值
-            credit_code = get_code(company_name)
+            try:
+                credit_code = get_code(company_name)
+            except:
+                credit_code = '请求失败'
+
+            print(credit_code)
             df.loc[idx, '统一社会信用代码'] = credit_code  # 直接在 df 中赋值
 
         # === 每批处理完，立即写回 Excel 文件 ===
@@ -90,7 +96,7 @@ def process_excel_in_batches(file_path, output_path, batch_size=100):
 
 # === 调用示例 ===
 if __name__ == "__main__":
-    input_file = "code.xlsx"  # 输入文件
+    input_file = "clean.xlsx"  # 输入文件
     output_file = "企业数据_回填结果_code.xlsx"  # 输出文件（可与输入相同）
 
     result_df = process_excel_in_batches(input_file, output_file, batch_size=100)
